@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FIFA Premier League</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f4f4f4;
+      color: #000;
+      transition: all 0.3s;
+    }
+    h1 { margin: 20px; }
+    table {
+      border-collapse: collapse;
+      width: 90%;
+      margin: 20px auto;
+      background: #fff;
+      transition: all 0.3s;
+    }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background: #222; color: #fff; }
+    input, select, button { margin: 5px; padding: 5px; }
+    #controls { margin: 20px; }
+    .reset-btn { background: red; color: white; border: none; padding: 10px; cursor: pointer; }
+    .reset-btn:hover { opacity: 0.8; }
+    .toggle-btn { background: #555; color: #fff; border: none; padding: 10px; cursor: pointer; margin-left: 10px; }
+    .toggle-btn:hover { opacity: 0.8; }
+
+    /* Dark mode styles */
+    body.dark {
+      background: #121212;
+      color: #fff;
+    }
+    body.dark table {
+      background: #1e1e1e;
+      color: #fff;
+    }
+    body.dark th {
+      background: #444;
+    }
+    body.dark td, body.dark th {
+      border: 1px solid #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>FIFA Premier League</h1>
+
+  <div id="controls">
+    <h3>Add Player</h3>
+    <input type="text" id="newPlayer" placeholder="Player name">
+    <button onclick="addPlayer()">Add</button>
+    
+    <h3>Enter Match Result</h3>
+    <select id="player1"></select>
+    <input type="number" id="score1" min="0" value="0">
+    vs 
+    <input type="number" id="score2" min="0" value="0">
+    <select id="player2"></select>
+    <button onclick="addResult()">Submit Result</button>
+    
+    <br><br>
+    <button class="reset-btn" onclick="resetLeague()">Reset League</button>
+    <button class="toggle-btn" onclick="toggleTheme()">Toggle Dark/Light</button>
+  </div>
+
+  <table id="leagueTable">
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>MP</th>
+        <th>W</th>
+        <th>D</th>
+        <th>L</th>
+        <th>GF</th>
+        <th>GA</th>
+        <th>GD</th>
+        <th>Pts</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    let players = ["Tony", "Alex", "Brayo", "Newton", "Brollins"];
+    let stats = {};
+
+    function initStats() {
+      players.forEach(p => {
+        if (!stats[p]) {
+          stats[p] = { MP:0, W:0, D:0, L:0, GF:0, GA:0, Pts:0 };
+        }
+      });
+    }
+
+    function saveData() {
+      localStorage.setItem("leaguePlayers", JSON.stringify(players));
+      localStorage.setItem("leagueStats", JSON.stringify(stats));
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function loadData() {
+      let p = localStorage.getItem("leaguePlayers");
+      let s = localStorage.getItem("leagueStats");
+      let theme = localStorage.getItem("theme");
+      if (p && s) {
+        players = JSON.parse(p);
+        stats = JSON.parse(s);
+      }
+      if (theme === "dark") {
+        document.body.classList.add("dark");
+      }
+    }
+
+    function updateDropdowns() {
+      let p1 = document.getElementById("player1");
+      let p2 = document.getElementById("player2");
+      p1.innerHTML = "";
+      p2.innerHTML = "";
+      players.forEach(p => {
+        let o1 = document.createElement("option");
+        o1.value = o1.text = p;
+        p1.add(o1);
+        let o2 = document.createElement("option");
+        o2.value = o2.text = p;
+        p2.add(o2);
+      });
+    }
+
+    function updateTable() {
+      let tbody = document.querySelector("#leagueTable tbody");
+      tbody.innerHTML = "";
+      let sorted = players.slice().sort((a,b) => stats[b].Pts - stats[a].Pts || (stats[b].GF - stats[b].GA) - (stats[a].GF - stats[a].GA));
+      sorted.forEach(p => {
+        let st = stats[p];
+        let row = `<tr>
+          <td>${p}</td>
+          <td>${st.MP}</td>
+          <td>${st.W}</td>
+          <td>${st.D}</td>
+          <td>${st.L}</td>
